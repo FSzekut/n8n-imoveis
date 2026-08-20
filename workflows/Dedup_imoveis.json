@@ -10,7 +10,8 @@
         0
       ],
       "id": "485af8fd-1c6a-4c1e-a6d8-0f123cc8a56b",
-      "name": "When clicking ‘Execute workflow’"
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
     },
     {
       "parameters": {
@@ -19,7 +20,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        448,
+        672,
         0
       ],
       "id": "4cc08406-8761-452b-9710-fcceaed46fe5",
@@ -33,17 +34,18 @@
             {
               "id": "25efc744-41a5-45f3-af3e-e4ff2c5e55c4",
               "name": "chave",
-              "value": "={{ $json.address.city }}-{{ $json.name }}",
+              "value": "={{ $('Split Out').item.json.id }}-{{ $('Split Out').item.json.preco }}",
               "type": "string"
             }
           ]
         },
+        "includeOtherFields": true,
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        672,
+        896,
         0
       ],
       "id": "03aa8ae0-a5c5-4fc8-ba4d-87ffaefd39df",
@@ -58,7 +60,7 @@
       "type": "n8n-nodes-base.removeDuplicates",
       "typeVersion": 2,
       "position": [
-        896,
+        1120,
         0
       ],
       "id": "dc6eb96a-a45a-4bfd-8f01-a79f1040efcf",
@@ -66,7 +68,25 @@
     },
     {
       "parameters": {
-        "url": " https://jsonplaceholder.typicode.com/users",
+        "method": "POST",
+        "url": "http://localhost:8000/coleta",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "portal",
+              "value": "={{ $json.portal }}"
+            },
+            {
+              "name": "bairro",
+              "value": "={{ $json.bairro }}"
+            },
+            {
+              "name": "url",
+              "value": "={{ $json.url }}"
+            }
+          ]
+        },
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -96,6 +116,70 @@
       ],
       "id": "1139cf73-dc5c-492a-a66c-db65531812b8",
       "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Um item por (portal, bairro). O nó seguinte roda uma vez por item.\n// Os filtros vão na URL: o portal corta 1.569 para 31 antes de mandar, em vez\n// de baixarmos 12 páginas para jogar quase tudo fora depois.\nconst FILTRO = 'precoMaximo=950000&quartos=2,3,4&vagas=2,3,4&areaMinima=100';\n\nconst bairros = [\n  'alto-da-rua-xv', 'alto-da-gloria', 'agua-verde',   // preferenciais\n  'bigorrilho', 'batel', 'merces',                    // secundários\n];\n\nconst portais = {\n  vivareal: b =>\n    `https://www.vivareal.com.br/venda/parana/curitiba/bairros/${b}/apartamento_residencial/?${FILTRO}`,\n\n  // ZAP desligado de propósito: 28 dos 30 anúncios têm o MESMO @id do VivaReal\n  // e nenhum é exclusivo. Dobra o tempo da rodada sem acrescentar imóvel.\n  // zap: b => `https://www.zapimoveis.com.br/venda/apartamentos/pr+curitiba++${b}/?${FILTRO}`,\n};\n\nreturn bairros.flatMap(bairro =>\n  Object.entries(portais).map(([portal, montaUrl]) => ({\n    json: { portal, bairro, url: montaUrl(bairro) },\n  }))\n);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -240
+      ],
+      "id": "a547e7db-04ed-4e79-8351-ee185e283ea3",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "itens",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "1c754ae3-70fa-48f1-a700-75913afa02c8",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "chatId": "8741625325",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        0
+      ],
+      "id": "5fe26d0a-d23e-44ba-af83-4e856e8811bb",
+      "name": "Send a text message",
+      "webhookId": "586bbc30-f829-4ddd-aa17-83aa06dd9459",
+      "credentials": {
+        "telegramApi": {
+          "id": "7Mhp5SGXuDWKcYXN",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Junta os anúncios novos num texto só. O nó do Telegram roda uma vez por item\n// de entrada: sem agregar, 80 anúncios virariam 80 mensagens.\nconst itens = $input.all().map(i => i.json);\nif (itens.length === 0) return [];          // nada novo: não manda nada\n\n// Um nó anterior pode descartar campos sem erro nenhum (o Set em modo manual faz\n// exatamente isso). Sem esta checagem, a mensagem sai bonita e escrita\n// \"undefined · R$ NaN\", com todos os nós verdes.\nconst quebrados = itens.filter(o => o.preco == null || o.bairro == null || !o.url);\nif (quebrados.length) {\n  throw new Error(\n    `${quebrados.length} de ${itens.length} itens sem preco/bairro/url — ` +\n    `algum nó anterior descartou campos. Chaves recebidas: ${Object.keys(itens[0]).join(', ')}`\n  );\n}\n\nconst brl = v => 'R$ ' + Number(v).toLocaleString('pt-BR');\nconst prioridade = ['alto-da-rua-xv', 'alto-da-gloria', 'agua-verde'];\nconst peso = b => { const i = prioridade.indexOf(b); return i < 0 ? 9 : i; };\n\nitens.sort((a, b) => peso(a.bairro) - peso(b.bairro) || a.preco - b.preco);\n\nconst linhas = itens.map(o =>\n  `🏠 <b>${o.bairro}</b> · ${brl(o.preco)}\\n` +\n  `${o.quartos ?? '?'}q · ${o.vagas ?? '?'}v · ${o.area ?? '?'}m² · ${o.rua ?? ''}\\n` +\n  `${o.url}`\n);\n\n// O Telegram corta a mensagem em 4096 caracteres, então quebra antes disso.\nconst msgs = [];\nlet atual = `<b>${itens.length} anúncio(s) novo(s)</b>\\n\\n`;\nfor (const l of linhas) {\n  if ((atual + l).length > 3500) { msgs.push(atual); atual = ''; }\n  atual += l + '\\n\\n';\n}\nif (atual.trim()) msgs.push(atual);\n\nreturn msgs.map(texto => ({ json: { texto } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "0b943bca-0b09-4b0a-b2e1-344697ccc552",
+      "name": "Code in JavaScript2"
     }
   ],
   "pinData": {},
@@ -137,7 +221,7 @@
       "main": [
         [
           {
-            "node": "Code in JavaScript",
+            "node": "Split Out",
             "type": "main",
             "index": 0
           }
@@ -148,7 +232,51 @@
       "main": [
         [
           {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
             "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
@@ -162,8 +290,9 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "53ea6951-00b2-4c6d-944c-fdea53bc730e",
+  "versionId": "18cadc36-17a3-44ff-ae1b-a541ca74ed3c",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "8cd6739049bf6f2f0f5a9d17b32f0b741f78cabe91f1867e35197a1df38636e9"
   },
   "nodeGroups": [],
