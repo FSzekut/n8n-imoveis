@@ -1,0 +1,114 @@
+{
+  "name": "Dedup de imóveis",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "485af8fd-1c6a-4c1e-a6d8-0f123cc8a56b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { json: { portal: 'ZAP',       preco: 450000, bairro: 'Batel' } },\n  { json: { portal: 'VivaReal',  preco: 520000, bairro: 'Água Verde' } },\n  { json: { portal: 'OLX',       preco: 450000, bairro: 'Batel' } },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "4cc08406-8761-452b-9710-fcceaed46fe5",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "25efc744-41a5-45f3-af3e-e4ff2c5e55c4",
+              "name": "chave",
+              "value": "={{ $json.bairro }}-{{ $json.preco }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "03aa8ae0-a5c5-4fc8-ba4d-87ffaefd39df",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "dc6eb96a-a45a-4bfd-8f01-a79f1040efcf",
+      "name": "Remove Duplicates"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a90ada1e-ff9e-440f-a879-2a514f6711b5",
+  "meta": {
+    "instanceId": "8cd6739049bf6f2f0f5a9d17b32f0b741f78cabe91f1867e35197a1df38636e9"
+  },
+  "nodeGroups": [],
+  "id": "iabwSNQxVYkl1BVU",
+  "tags": []
+}
