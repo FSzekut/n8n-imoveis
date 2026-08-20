@@ -1,14 +1,11 @@
 {
-  "name": "Dedup de imóveis",
+  "name": "Dedup_imoveis",
   "nodes": [
     {
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [
-        0,
-        0
-      ],
+      "position": [0, 0],
       "id": "485af8fd-1c6a-4c1e-a6d8-0f123cc8a56b",
       "name": "When clicking ‘Execute workflow’"
     },
@@ -18,12 +15,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        224,
-        0
-      ],
+      "position": [448, 0],
       "id": "4cc08406-8761-452b-9710-fcceaed46fe5",
-      "name": "Code in JavaScript"
+      "name": "Code in JavaScript",
+      "disabled": true
     },
     {
       "parameters": {
@@ -32,7 +27,7 @@
             {
               "id": "25efc744-41a5-45f3-af3e-e4ff2c5e55c4",
               "name": "chave",
-              "value": "={{ $json.bairro }}-{{ $json.preco }}",
+              "value": "={{ $json.address.city }}-{{ $json.name }}",
               "type": "string"
             }
           ]
@@ -41,10 +36,7 @@
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
-      "position": [
-        448,
-        0
-      ],
+      "position": [672, 0],
       "id": "03aa8ae0-a5c5-4fc8-ba4d-87ffaefd39df",
       "name": "Edit Fields"
     },
@@ -54,12 +46,20 @@
       },
       "type": "n8n-nodes-base.removeDuplicates",
       "typeVersion": 2,
-      "position": [
-        672,
-        0
-      ],
+      "position": [896, 0],
       "id": "dc6eb96a-a45a-4bfd-8f01-a79f1040efcf",
       "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "url": " https://jsonplaceholder.typicode.com/users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [224, 0],
+      "id": "475a2893-091a-41c7-83dd-ec5a9e97bccc",
+      "name": "HTTP Request"
     }
   ],
   "pinData": {},
@@ -68,7 +68,7 @@
       "main": [
         [
           {
-            "node": "Code in JavaScript",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
@@ -96,6 +96,17 @@
           }
         ]
       ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -104,7 +115,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "a90ada1e-ff9e-440f-a879-2a514f6711b5",
+  "versionId": "06e094a4-a65d-40e9-b383-4f506fe272e6",
   "meta": {
     "instanceId": "8cd6739049bf6f2f0f5a9d17b32f0b741f78cabe91f1867e35197a1df38636e9"
   },
