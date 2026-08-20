@@ -5,7 +5,10 @@
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "id": "485af8fd-1c6a-4c1e-a6d8-0f123cc8a56b",
       "name": "When clicking ‘Execute workflow’"
     },
@@ -15,7 +18,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [448, 0],
+      "position": [
+        448,
+        0
+      ],
       "id": "4cc08406-8761-452b-9710-fcceaed46fe5",
       "name": "Code in JavaScript",
       "disabled": true
@@ -36,17 +42,25 @@
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
-      "position": [672, 0],
+      "position": [
+        672,
+        0
+      ],
       "id": "03aa8ae0-a5c5-4fc8-ba4d-87ffaefd39df",
       "name": "Edit Fields"
     },
     {
       "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "dedupeValue": "={{ $json.chave }}",
         "options": {}
       },
       "type": "n8n-nodes-base.removeDuplicates",
       "typeVersion": 2,
-      "position": [896, 0],
+      "position": [
+        896,
+        0
+      ],
       "id": "dc6eb96a-a45a-4bfd-8f01-a79f1040efcf",
       "name": "Remove Duplicates"
     },
@@ -57,9 +71,31 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [224, 0],
+      "position": [
+        224,
+        0
+      ],
       "id": "475a2893-091a-41c7-83dd-ec5a9e97bccc",
       "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        -240
+      ],
+      "id": "1139cf73-dc5c-492a-a66c-db65531812b8",
+      "name": "Schedule Trigger"
     }
   ],
   "pinData": {},
@@ -107,15 +143,26 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "06e094a4-a65d-40e9-b383-4f506fe272e6",
+  "versionId": "53ea6951-00b2-4c6d-944c-fdea53bc730e",
   "meta": {
     "instanceId": "8cd6739049bf6f2f0f5a9d17b32f0b741f78cabe91f1867e35197a1df38636e9"
   },
