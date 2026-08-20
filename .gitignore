@@ -1,0 +1,6 @@
+credentials/
+*credentials*.json
+.env
+.n8n/
+outputs/
+logs/
